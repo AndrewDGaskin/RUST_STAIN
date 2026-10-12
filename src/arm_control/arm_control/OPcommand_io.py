@@ -10,7 +10,7 @@ class CommandSubscriber(Node):
     def listener_output(self, msg):
 
         
-        print(f'OP Received: {msg.data}')
+        #print(f'OP Received: {msg.data}')
         if len(msg.data) < 6:
             return
 

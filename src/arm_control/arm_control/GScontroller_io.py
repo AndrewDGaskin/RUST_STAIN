@@ -35,7 +35,7 @@ class ControllerManager(Node):
         msg = Float32MultiArray() 
         msg.data = [joint0, joint1, joint2, joint3, clawopen, clawclose]
         self.publisher.publish(msg) 
-        print(f'GS sends: {msg.data}')
+        #print(f'GS sends: {msg.data}')
     
 
 def main():
