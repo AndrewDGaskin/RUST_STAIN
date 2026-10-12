@@ -55,7 +55,7 @@ int main() {
     float joint0_command, joint1_command, joint2_command, joint3_command, clawOpen_command, clawClose_command;
     
     uint64_t last_feedback_time = time_us_64();
-
+    
     
     while (true) {
         int command = getchar_timeout_us(0);
