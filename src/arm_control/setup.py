@@ -24,6 +24,10 @@ setup(
     },
     entry_points={
         'console_scripts': [
+        'OPcommand_io = arm_control.OPcommand_io:main',
+        'OPfeedback = arm_control.OPfeedback:main',
+        'GScontroller_io = arm_control.GScontroller_io:main',
+        'GSfeedback_subscriber = arm_control.GSfeedback_subscriber:main',
         ],
     },
 )
