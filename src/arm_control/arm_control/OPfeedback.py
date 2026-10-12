@@ -7,7 +7,7 @@ class PicoFeedback(Node):
     def __init__(self):
         super().__init__('pico_feedback')
         self.publisher = self.create_publisher(Float32MultiArray, 'topic_feedback', 10)
-        self.pico = serial.Serial('PUT YOUR PORT HERE', 115200, timeout=0.1)
+        self.pico = serial.Serial('/dev/ttyACM*', 115200, timeout=0.1)
         self.timer = self.create_timer(0.05, self.read_pico_feedback)
         
 
