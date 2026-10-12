@@ -26,7 +26,7 @@ class CommandSubscriber(Node):
         #Prep to transmit the command values to Pico
         command_values = [joint0, joint1, joint2, joint3, clawopen, clawclose]
         command_string = ','.join(map(str, command_values))
-        print(f'Command to send to Pico: {command_string}')
+        #print(f'Command to send to Pico: {command_string}')
 
 
 def main():

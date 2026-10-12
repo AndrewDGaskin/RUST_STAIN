@@ -9,7 +9,7 @@ class FeedbackSubscriber(Node):
 
     def read_op_feedback(self, msg):
         #print(f'OP Received: {msg.data}')
-        if len(msg.data) < 9:
+        if len(msg.data) < 5:
             return
 
         #Extract joint and claw values from the received message
@@ -17,11 +17,10 @@ class FeedbackSubscriber(Node):
         joint1 = msg.data[1]
         joint2 = msg.data[2]
         joint3 = msg.data[3]
-        clawopen = msg.data[4]
-        clawclose = msg.data[5]
-        temp = msg.data[6]
-        pressure = msg.data[7]
-        acceleration = msg.data[8]
+        claw = msg.data[4]
+        #temp = msg.data[6]
+        #pressure = msg.data[7]
+        #acceleration = msg.data[8]
 
 
 def main():

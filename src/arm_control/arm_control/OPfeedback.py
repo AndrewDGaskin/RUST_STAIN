@@ -15,7 +15,7 @@ class PicoFeedback(Node):
         line = self.pico.readline().decode('utf-8').rstrip()
         if line:
             values = line.split(',')
-            if len(values) == 9:  # Expecting 9 values: joint0, joint1, joint2, joint3, clawopen, clawclose, temp, pressure, acceleration
+            if len(values) == 5:  # Expecting 5 values: joint0_target, joint1_target, joint2_target, joint3_target, claw_target
                 try:
 
                     #get values from pico, see if its corrupted, if not publish to feedback topic
