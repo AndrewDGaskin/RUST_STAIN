@@ -12,30 +12,46 @@ class PicoFeedback(Node):
             self.send_pico_command,
             10
         )
+        PICO_PORT = '/dev/rover_pico'
         self.publisher = self.create_publisher(Float32MultiArray, 'topic_feedback', 10)
-        self.pico = serial.Serial('/dev/ttyACM0', 115200, timeout=0.1)
+        self.pico = serial.Serial(PICO_PORT, 115200, timeout=0.1)
         self.timer = self.create_timer(0.05, self.read_pico_feedback)
         
 
     def read_pico_feedback(self):
         line = self.pico.readline().decode('utf-8').rstrip()
-        if line:
-            values = line.split(',')
-            if len(values) == 5:  # Expecting 5 values: joint0_target, joint1_target, joint2_target, joint3_target, claw_target
-                try:
 
-                    #get values from pico, see if its corrupted, if not publish to feedback topic
-                    feedback_values = [float(value) for value in values]
-                    print(f'Feedback from Pico: {line}')
-                    feedback_msg = Float32MultiArray()
-                    feedback_msg.data = feedback_values
-                    self.publisher.publish(feedback_msg)
+        if not line:
+            return
 
-                    #if corrupted, log error
-                except ValueError:
-                    self.get_logger().error(f'Invalid feedback values: {values}')
-            else:
-                self.get_logger().error(f'Unexpected number of feedback values: {values}')
+        # Ignore anything from the Pico that is not telemetry
+        if not line.startswith('TEL,'):
+            print(f'Pico: {line}')
+            return
+
+        # Remove "TEL," and split the remaining telemetry values
+        values = line.split(',')[1:]
+
+        # Expecting 11 telemetry values
+        if len(values) == 11:
+            try:
+                feedback_values = [float(value) for value in values]
+
+                print(f'Feedback from Pico: {line}')
+
+                feedback_msg = Float32MultiArray()
+                feedback_msg.data = feedback_values
+                self.publisher.publish(feedback_msg)
+
+            except ValueError:
+                self.get_logger().error(
+                    f'Invalid feedback values: {values}'
+                )
+
+        else:
+            self.get_logger().error(
+                f'Unexpected number of feedback values: {values}'
+            )
 
     def send_pico_command(self, msg):
         if len(msg.data) < 6:

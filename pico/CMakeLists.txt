@@ -32,6 +32,7 @@ add_executable(rust_stain_pico
 target_link_libraries(rust_stain_pico
     pico_stdlib
     hardware_pwm
+    hardware_i2c
 )
 
 pico_enable_stdio_usb(rust_stain_pico 1)
