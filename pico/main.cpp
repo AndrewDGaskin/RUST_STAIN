@@ -221,10 +221,23 @@ int main() {
 
     configure_bno055();
 
+    //testing
     sleep_ms(3000);
+
+    uint8_t test_id = 0;
+
+if (i2c_read_register_byte(i2c0, 0x28, 0x00, &test_id)) {
+    printf("0x28 chip ID = 0x%02X\n", test_id);
+}
+
+if (i2c_read_register_byte(i2c0, 0x77, 0x00, &test_id)) {
+    printf("0x77 chip ID = 0x%02X\n", test_id);
+}
 
     scan_i2c_bus(i2c0, "i2c0");
     scan_i2c_bus(i2c1, "i2c1");
+//end testing
+
 
     initialize_joint0_motor();
     initialize_servo(JOINT1_GPIO);
@@ -1078,7 +1091,7 @@ void scan_i2c_bus(i2c_inst_t* i2c, const char* bus_name)
             2000
         );
 
-        if (result >= 0)
+        if (result == 1)
         {
             printf("%s found device at 0x%02X\n",
                    bus_name,
