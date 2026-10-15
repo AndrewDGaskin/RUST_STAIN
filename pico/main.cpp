@@ -37,6 +37,7 @@ bool read_bmp388_raw(uint32_t *raw_pressure, uint32_t *raw_temperature);
 float compensate_bmp388_temperature(uint32_t raw_temperature);
 float compensate_bmp388_pressure(uint32_t raw_pressure);
 float calculate_relative_altitude(float pressure_pa, float reference_pressure_pa);
+void scan_i2c_bus(i2c_inst_t* i2c, const char* bus_name);
 
 //Feedback
 void send_feedback();
@@ -219,6 +220,11 @@ int main() {
     }   
 
     configure_bno055();
+
+    sleep_ms(3000);
+
+    scan_i2c_bus(i2c0, "i2c0");
+    scan_i2c_bus(i2c1, "i2c1");
 
     initialize_joint0_motor();
     initialize_servo(JOINT1_GPIO);
@@ -1050,4 +1056,33 @@ float clamp_value(float value, float min_value, float max_value) {
     }
 
     return value;
+}
+
+
+
+//
+void scan_i2c_bus(i2c_inst_t* i2c, const char* bus_name)
+{
+    printf("Scanning %s...\n", bus_name);
+
+    for (int address = 0x08; address <= 0x77; address++)
+    {
+        uint8_t data;
+
+        int result = i2c_read_timeout_us(
+            i2c,
+            address,
+            &data,
+            1,
+            false,
+            2000
+        );
+
+        if (result >= 0)
+        {
+            printf("%s found device at 0x%02X\n",
+                   bus_name,
+                   address);
+        }
+    }
 }
