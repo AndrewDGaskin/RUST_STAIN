@@ -37,7 +37,7 @@ bool read_bmp388_raw(uint32_t *raw_pressure, uint32_t *raw_temperature);
 float compensate_bmp388_temperature(uint32_t raw_temperature);
 float compensate_bmp388_pressure(uint32_t raw_pressure);
 float calculate_relative_altitude(float pressure_pa, float reference_pressure_pa);
-void scan_i2c_bus(i2c_inst_t* i2c, const char* bus_name);
+//void scan_i2c_bus(i2c_inst_t* i2c, const char* bus_name);
 
 //Feedback
 void send_feedback();
@@ -65,8 +65,8 @@ const uint BMP_SDA_GPIO = 8;
 const uint BMP_SCL_GPIO = 9;
 
 //BNO055
-const uint BNO_SDA_GPIO = 2;
-const uint BNO_SCL_GPIO = 3;
+//const uint BNO_SDA_GPIO = 2;
+//const uint BNO_SCL_GPIO = 3;
 
 /*
 =================================================================================================================================================================
@@ -151,10 +151,10 @@ float joint3_target = 90.0;
 float claw_target = 90.0;
 
 //Maximum commanded motion speed in degrees per second
-const float JOINT1_SPEED_DPS = 30.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float JOINT2_SPEED_DPS = 30.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float JOINT3_SPEED_DPS = 30.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float CLAW_SPEED_DPS   = 30.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT1_SPEED_DPS = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT2_SPEED_DPS = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT3_SPEED_DPS = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float CLAW_SPEED_DPS   = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
 
 const float JOINT1_SERVO_MAX_ANGLE = 270.0f;
 const float JOINT2_SERVO_MAX_ANGLE = 270.0f;
@@ -180,7 +180,7 @@ const uint64_t FEEDBACK_INTERVAL_US = 100000; // 100 ms = 10 Hz
 
 // I2C communication
 const uint32_t I2C_FREQUENCY_HZ = 100000;     // 100 kHz
-const uint32_t I2C_TIMEOUT_US = 2000;          // 2 ms
+const uint32_t I2C_TIMEOUT_US = 10000;          // 10 ms
 
 //I2C startup
 const uint32_t SENSOR_STARTUP_DELAY_MS = 700;
@@ -221,22 +221,65 @@ int main() {
 
     configure_bno055();
 
-    //testing
-    sleep_ms(3000);
+/*testing=======================================================================================================================================================
+    sleep_ms(10000);
 
-    uint8_t test_id = 0;
+    uint8_t reg = 0x00;
+    uint8_t value = 0;
 
-if (i2c_read_register_byte(i2c0, 0x28, 0x00, &test_id)) {
-    printf("0x28 chip ID = 0x%02X\n", test_id);
-}
+    int write_result = i2c_write_timeout_us(
+        i2c0,
+        0x28,
+        &reg,
+        1,
+        true,
+        10000
+    );
 
-if (i2c_read_register_byte(i2c0, 0x77, 0x00, &test_id)) {
-    printf("0x77 chip ID = 0x%02X\n", test_id);
-}
+    printf("0x28 write result = %d\n", write_result);
+
+    int read_result = i2c_read_timeout_us(
+        i2c0,
+        0x28,
+        &value,
+        1,
+        false,
+        10000
+    );
+
+    printf("0x28 read result = %d, value = 0x%02X\n",
+            read_result,
+            value);
+
+    reg = 0x00;
+    value = 0;
+
+    write_result = i2c_write_timeout_us(
+        i2c0,
+         0x77,
+        &reg,
+        1,
+        true,
+        10000
+    );
+
+    printf("0x77 write result = %d\n", write_result);
+
+    read_result = i2c_read_timeout_us(
+        i2c0,
+        0x77,
+        &value,
+        1,
+        false,
+        10000
+    );
+
+    printf("0x77 read result = %d, value = 0x%02X\n",
+        read_result,
+        value);
 
     scan_i2c_bus(i2c0, "i2c0");
-    scan_i2c_bus(i2c1, "i2c1");
-//end testing
+*///end testing================================================================================================================================================
 
 
     initialize_joint0_motor();
@@ -419,19 +462,13 @@ Functions
 
 //Starts up sensors, sets there values
 void initialize_i2c() {
-    //BMP bus
     i2c_init(i2c0, I2C_FREQUENCY_HZ);
+
     gpio_set_function(BMP_SDA_GPIO, GPIO_FUNC_I2C);
     gpio_set_function(BMP_SCL_GPIO, GPIO_FUNC_I2C);
+
     gpio_pull_up(BMP_SDA_GPIO);
     gpio_pull_up(BMP_SCL_GPIO);
-
-    //BNO bus
-    i2c_init(i2c1, I2C_FREQUENCY_HZ);
-    gpio_set_function(BNO_SDA_GPIO, GPIO_FUNC_I2C);
-    gpio_set_function(BNO_SCL_GPIO, GPIO_FUNC_I2C);
-    gpio_pull_up(BNO_SDA_GPIO);
-    gpio_pull_up(BNO_SCL_GPIO);
 }
 
 
@@ -459,15 +496,15 @@ void detect_sensors() {
         printf("BMP388 not detected\n");
     }
 
-    // Check BNO055 on I2C1
-    if (i2c_read_register_byte(i2c1, BNO_ADDRESS_1, BNO_CHIP_ID_REG, &chip_id)
+    // Check BNO055 on i2c0
+    if (i2c_read_register_byte(i2c0, BNO_ADDRESS_1, BNO_CHIP_ID_REG, &chip_id)
         && chip_id == BNO_EXPECTED_ID) {
 
         bno_address = BNO_ADDRESS_1;
         bno_connected = true;
         printf("BNO055 confirmed at 0x%02X\n", (unsigned int)bno_address);
     }
-    else if (i2c_read_register_byte(i2c1, BNO_ADDRESS_2, BNO_CHIP_ID_REG, &chip_id)
+    else if (i2c_read_register_byte(i2c0, BNO_ADDRESS_2, BNO_CHIP_ID_REG, &chip_id)
              && chip_id == BNO_EXPECTED_ID) {
 
         bno_address = BNO_ADDRESS_2;
@@ -490,7 +527,7 @@ void detect_sensors() {
 
     // Enter configuration mode before changing settings
     i2c_write_register_byte(
-        i2c1,
+        i2c0,
         bno_address,
         BNO_OPR_MODE_REG,
         BNO_MODE_CONFIG
@@ -500,7 +537,7 @@ void detect_sensors() {
 
     // Explicitly use m/s^2 for acceleration
     i2c_write_register_byte(
-        i2c1,
+        i2c0,
         bno_address,
         BNO_UNIT_SEL_REG,
         0x00
@@ -508,7 +545,7 @@ void detect_sensors() {
 
     // Start accelerometer-only mode
     i2c_write_register_byte(
-        i2c1,
+        i2c0,
         bno_address,
         BNO_OPR_MODE_REG,
         BNO_MODE_ACCONLY
@@ -529,7 +566,7 @@ bool read_bno055_acceleration(float *x, float *y, float *z) {
     uint8_t data[6];
 
     if (!i2c_read_register_block(
-            i2c1,
+            i2c0,
             bno_address,
             BNO_ACCEL_DATA_START_REG,
             data,
@@ -965,6 +1002,7 @@ void claw_update(float clawOpen_command, float clawClose_command, float delta_ti
 
 
 void send_feedback() {
+    //printf("FW_TEST_10SEC_DIAGNOSTIC\n");
     printf(
         "TEL,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
         joint0_motor_command,
@@ -1073,7 +1111,7 @@ float clamp_value(float value, float min_value, float max_value) {
 
 
 
-//
+/*//
 void scan_i2c_bus(i2c_inst_t* i2c, const char* bus_name)
 {
     printf("Scanning %s...\n", bus_name);
@@ -1099,3 +1137,4 @@ void scan_i2c_bus(i2c_inst_t* i2c, const char* bus_name)
         }
     }
 }
+*/

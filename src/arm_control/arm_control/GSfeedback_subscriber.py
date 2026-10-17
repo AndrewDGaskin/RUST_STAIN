@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 import csv
-import time
+from datetime import datetime
 
 class FeedbackSubscriber(Node):
     def __init__(self):
@@ -50,7 +50,7 @@ class FeedbackSubscriber(Node):
         altitude = msg.data[10]
 
         self.csv_writer.writerow([
-            time.time(),
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
             joint0,
             joint1,
             joint2,
