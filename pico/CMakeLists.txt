@@ -27,6 +27,9 @@ pico_sdk_init()
 
 add_executable(rust_stain_pico
     main.cpp
+    sd_logger.cpp
+    sensors.cpp
+    arm_control.cpp
 )
 
 target_link_libraries(rust_stain_pico
