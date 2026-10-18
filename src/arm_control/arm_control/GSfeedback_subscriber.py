@@ -3,13 +3,19 @@ from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 import csv
 from datetime import datetime
+import sys
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QTimer
+from arm_control.GUI import GroundStationGUI
 
 class FeedbackSubscriber(Node):
-    def __init__(self):
+    def __init__(self, GUI_window):
         super().__init__('feedback_subscriber')
         self.subscription = self.create_subscription(Float32MultiArray, 'topic_feedback', self.read_op_feedback, 10)
+        self.GUI_window = GUI_window
         self.csv_file = open('telemetry.csv', 'w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
+        
 
         self.csv_writer.writerow([
             'timestamp',
@@ -27,10 +33,12 @@ class FeedbackSubscriber(Node):
         ])
 
     def read_op_feedback(self, msg):
-        print(f'GS Received: {msg.data}')
+        #print(f'GS Received: {msg.data}')
 
         if len(msg.data) != 11:
             return
+
+        feedback_values = list(msg.data)
 
         # Arm telemetry
         joint0 = msg.data[0]
@@ -65,12 +73,30 @@ class FeedbackSubscriber(Node):
         ])
 
         self.csv_file.flush()
+        self.GUI_window.update_feedback(feedback_values)
 
 
 def main():
     rclpy.init()
-    ROS_node_feedback_subscriber = FeedbackSubscriber()
-    rclpy.spin(ROS_node_feedback_subscriber)
+
+    app = QApplication(sys.argv)
+
+    GUI_window = GroundStationGUI()
+    GUI_window.show()
+
+    ROS_node = FeedbackSubscriber(GUI_window)
+
+    ROS_timer = QTimer()
+    ROS_timer.timeout.connect(
+        lambda: rclpy.spin_once(ROS_node, timeout_sec=0.0)
+    )
+    ROS_timer.start(10)
+
+    app.exec_()
+
+    ROS_node.csv_file.close()
+    ROS_node.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__': 
     main() 

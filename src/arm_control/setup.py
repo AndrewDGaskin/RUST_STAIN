@@ -27,6 +27,7 @@ setup(
         'OPfeedback = arm_control.OPfeedback:main',
         'GScontroller_io = arm_control.GScontroller_io:main',
         'GSfeedback_subscriber = arm_control.GSfeedback_subscriber:main',
+        'GUI = arm_control.GUI:main',
         ],
     },
 )

@@ -151,10 +151,10 @@ float joint3_target = 90.0;
 float claw_target = 90.0;
 
 //Maximum commanded motion speed in degrees per second
-const float JOINT1_SPEED_DPS = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float JOINT2_SPEED_DPS = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float JOINT3_SPEED_DPS = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float CLAW_SPEED_DPS   = 7.5f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT1_SPEED_DPS = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT2_SPEED_DPS = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT3_SPEED_DPS = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float CLAW_SPEED_DPS   = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
 
 const float JOINT1_SERVO_MAX_ANGLE = 270.0f;
 const float JOINT2_SERVO_MAX_ANGLE = 270.0f;
