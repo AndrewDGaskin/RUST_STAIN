@@ -15,6 +15,8 @@ class GroundStationGUI(QWidget):
     def __init__(self):
         super().__init__()
 
+        ##self.connection_status = QLabel("Disconnected")
+
         self.setWindowTitle("RUST STAIN Ground Station")
 
         self.axis0_value = QLabel("0.00")
@@ -35,6 +37,8 @@ class GroundStationGUI(QWidget):
 
 
     def setup_layout(self):
+
+        ##self.connection_status.setStyleSheet("color: Red; font-weight: bold;")
 
         arm_layout = QGridLayout()
 
@@ -85,6 +89,7 @@ class GroundStationGUI(QWidget):
 
         main_layout.addWidget(arm_group)
         main_layout.addWidget(sensor_group)
+        ##main_layout.addWidget(self.connection_status)
 
         self.setLayout(main_layout)
 
@@ -108,6 +113,9 @@ class GroundStationGUI(QWidget):
         self.temperature_value.setText(f"{data[8]:.2f} °C")
         self.pressure_value.setText(f"{data[9]:.2f} Pa")
         self.altitude_value.setText(f"{data[10]:.2f} m")
+
+    def check_connection(self):
+        
 
 
 def main():

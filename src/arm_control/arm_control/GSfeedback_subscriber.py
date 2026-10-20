@@ -7,6 +7,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
 from arm_control.GUI import GroundStationGUI
+##import time
 
 class FeedbackSubscriber(Node):
     def __init__(self, GUI_window):
@@ -15,6 +16,7 @@ class FeedbackSubscriber(Node):
         self.GUI_window = GUI_window
         self.csv_file = open('telemetry.csv', 'w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
+        ##self.last_feedback_time = None
         
 
         self.csv_writer.writerow([
@@ -37,6 +39,7 @@ class FeedbackSubscriber(Node):
 
         if len(msg.data) != 11:
             return
+        ##self.last_feedback_time = time.monotonic()
 
         feedback_values = list(msg.data)
 

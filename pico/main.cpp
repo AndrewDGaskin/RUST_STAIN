@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "sensors.h"
 
-//Feedback
+//Prototypes
 void send_feedback();
 
 
@@ -32,25 +32,21 @@ const uint64_t FEEDBACK_INTERVAL_US = 100000; // 100 ms = 10 Hz
 const int CONTROLLER_COMMAND_VALUES = 6;
 
 
-
+//Logging
 bool sd_logging_available = false;
 
 
 
 int main() {
     stdio_init_all();
+
+    sleep_ms(10000);
     initialize_sensors();
 
     sd_logging_available = initialize_sd_logging();
     if (!sd_logging_available) {
         printf("SD logging unavailable\n");
     }
-
-    
-    
-
-
-
 
     initialize_arm();
 
@@ -193,23 +189,6 @@ int main() {
 
     return 0;
 }
-
-
-
-
-
-
-
-
-/*
-=================================================================================================================================================================
-Functions
-=================================================================================================================================================================
-*/
-
-
-
-
 
 
 void send_feedback() {

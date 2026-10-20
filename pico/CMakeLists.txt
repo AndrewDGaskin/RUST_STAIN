@@ -30,12 +30,25 @@ add_executable(rust_stain_pico
     sd_logger.cpp
     sensors.cpp
     arm_control.cpp
+    hw_config.c
 )
 
 target_link_libraries(rust_stain_pico
     pico_stdlib
     hardware_pwm
     hardware_i2c
+    hardware_spi
+    no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
+)
+
+add_subdirectory(
+    lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src
+    build_fatfs
+)
+
+add_compile_definitions(
+    USE_PRINTF
+    USE_DBG_PRINTF
 )
 
 pico_enable_stdio_usb(rust_stain_pico 1)
