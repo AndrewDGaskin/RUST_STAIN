@@ -115,6 +115,7 @@ class GroundStationGUI(QWidget):
         self.altitude_value.setText(f"{data[10]:.2f} m")
 
     def check_connection(self):
+        pass
         
 
 
