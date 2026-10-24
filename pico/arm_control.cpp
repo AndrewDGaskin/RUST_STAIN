@@ -27,7 +27,7 @@ void claw_update(
 const uint JOINT0_IN1_GPIO = 11;
 const uint JOINT0_IN2_GPIO = 14;
 const uint JOINT0_PWM_GPIO = 15;
-const uint JOINT1_GPIO = 13;
+const uint JOINT1_GPIO = 18;
 const uint JOINT2_GPIO = 19;
 const uint JOINT3_GPIO = 20;
 const uint CLAW_GPIO = 6;
@@ -35,19 +35,29 @@ const uint CLAW_GPIO = 6;
 //Current commanded target positions
 float joint0_motor_command = 0.0f;
 float joint1_target = 135.0;
-float joint2_target = 135.0;
+float joint2_target = -45.0;
 float joint3_target = 90.0;
 float claw_target = 90.0;
 
 //Maximum commanded motion speed in degrees per second
-const float JOINT1_SPEED_DPS = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float JOINT2_SPEED_DPS = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float JOINT3_SPEED_DPS = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
-const float CLAW_SPEED_DPS   = 10.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT1_SPEED_DPS = 30.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT2_SPEED_DPS = 120.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float JOINT3_SPEED_DPS = 30.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float CLAW_SPEED_DPS   = 30.0f; //provisional value, will need to be tuned based on actual joint speed and desired responsiveness
+const float STARTUP_SPEED_DPS = 5.0f;
 
 const float JOINT1_SERVO_MAX_ANGLE = 270.0f;
+const float JOINT1_MIN_ANGLE = 55.0f;
+const float JOINT1_MAX_ANGLE = 145.0f;
+
 const float JOINT2_SERVO_MAX_ANGLE = 270.0f;
+const float JOINT2_MIN_ANGLE = -210.0f;
+const float JOINT2_MAX_ANGLE = 0.0f;
+
 const float JOINT3_SERVO_MAX_ANGLE = 180.0f;
+const float JOINT3_MIN_ANGLE = 0.0f;
+const float JOINT3_MAX_ANGLE = 135.0f;
+
 const float CLAW_SERVO_MAX_ANGLE   = 180.0f;
 
 const float JOINT0_PWM_CLOCK_DIV = 1.0f;
@@ -134,7 +144,7 @@ void set_servo_position(uint gpio, float angle, float servo_max_angle) {
     uint channel = pwm_gpio_to_channel(gpio);
 
     // Convert angle to pulse width in microseconds
-    float pulse_width_us = 1000.0f + (angle / servo_max_angle) * 1000.0f; // 1000us to 2000us for 0 to servo_max_angle degrees
+    float pulse_width_us = 500.0f + (angle / servo_max_angle) * 2000.0f; // 1000us to 2000us for 0 to servo_max_angle degrees
 
     // Convert pulse width to PWM level
     uint16_t level = (uint16_t)pulse_width_us;
@@ -152,7 +162,7 @@ void update_joint_positions(float joint0_command, float joint1_command, float jo
     claw_update(clawOpen_command, clawClose_command, delta_time);
 
     set_servo_position(JOINT1_GPIO, joint1_target, JOINT1_SERVO_MAX_ANGLE);
-    set_servo_position(JOINT2_GPIO, joint2_target, JOINT2_SERVO_MAX_ANGLE);
+    set_servo_position(JOINT2_GPIO, -joint2_target, JOINT2_SERVO_MAX_ANGLE);
     set_servo_position(JOINT3_GPIO, joint3_target, JOINT3_SERVO_MAX_ANGLE);
     set_servo_position(CLAW_GPIO, claw_target, CLAW_SERVO_MAX_ANGLE);
 }
@@ -160,34 +170,37 @@ void update_joint_positions(float joint0_command, float joint1_command, float jo
 
 
 void joint1_update(float command, float delta_time) {
-    joint1_target = joint1_target + command * JOINT1_SPEED_DPS * delta_time; // Update the target position based on the command
-    if (joint1_target >= JOINT1_SERVO_MAX_ANGLE) {
-        joint1_target = JOINT1_SERVO_MAX_ANGLE;
-    } else if (joint1_target <= 0.0) {
-        joint1_target = 0.0;
-    }
+    joint1_target += command * JOINT1_SPEED_DPS * delta_time;
+
+    joint1_target = std::clamp(
+        joint1_target,
+        JOINT1_MIN_ANGLE,
+        JOINT1_MAX_ANGLE
+    );
 }
 
 
 
 void joint2_update(float command, float delta_time) {
-    joint2_target = joint2_target + command * JOINT2_SPEED_DPS * delta_time; // Update the target position based on the command
-    if (joint2_target >= JOINT2_SERVO_MAX_ANGLE) {
-        joint2_target = JOINT2_SERVO_MAX_ANGLE;
-    } else if (joint2_target <= 0.0) {
-        joint2_target = 0.0;
-    }
+    joint2_target += command * JOINT2_SPEED_DPS * delta_time;
+
+    joint2_target = std::clamp(
+        joint2_target,
+        JOINT2_MIN_ANGLE,
+        JOINT2_MAX_ANGLE
+    );
 }
 
 
 
 void joint3_update(float command, float delta_time) {
-    joint3_target = joint3_target + command * JOINT3_SPEED_DPS * delta_time; // Update the target position based on the command
-    if (joint3_target >= JOINT3_SERVO_MAX_ANGLE) {
-        joint3_target = JOINT3_SERVO_MAX_ANGLE;
-    } else if (joint3_target <= 0.0) {
-        joint3_target = 0.0;
-    }
+    joint3_target += command * JOINT3_SPEED_DPS * delta_time;
+
+    joint3_target = std::clamp(
+        joint3_target,
+        JOINT3_MIN_ANGLE,
+        JOINT3_MAX_ANGLE
+    );
 }
 
 
@@ -223,8 +236,39 @@ float get_claw_target() {
     return claw_target;
 }
 
-void initialize_arm() {
+void move_servo_slowly(
+    uint gpio,
+    float start_angle,
+    float end_angle,
+    float servo_max_angle,
+    float min_angle,
+    float max_angle,
+    float direction
+) {
+    start_angle = std::clamp(start_angle, min_angle, max_angle);
+    end_angle = std::clamp(end_angle, min_angle, max_angle);
 
+    float angle = start_angle;
+    const float step = STARTUP_SPEED_DPS * 0.02f;
+
+    set_servo_position(gpio, angle * direction, servo_max_angle);
+    sleep_ms(20);
+
+    while (std::fabs(end_angle - angle) > step) {
+        if (angle < end_angle) {
+            angle += step;
+        } else {
+            angle -= step;
+        }
+
+        set_servo_position(gpio, angle * direction, servo_max_angle);
+        sleep_ms(20);
+    }
+
+    set_servo_position(gpio, end_angle * direction, servo_max_angle);
+}
+
+void initialize_arm() {
     initialize_joint0_motor();
 
     initialize_servo(JOINT1_GPIO);
@@ -232,27 +276,46 @@ void initialize_arm() {
     initialize_servo(JOINT3_GPIO);
     initialize_servo(CLAW_GPIO);
 
-    set_servo_position(
-        JOINT1_GPIO,
-        joint1_target,
-        JOINT1_SERVO_MAX_ANGLE
-    );
+move_servo_slowly(
+    JOINT1_GPIO,
+    80.0f,
+    joint1_target,
+    JOINT1_SERVO_MAX_ANGLE,
+    JOINT1_MIN_ANGLE,
+    JOINT1_MAX_ANGLE,
+    1.0f
+);
 
-    set_servo_position(
-        JOINT2_GPIO,
-        joint2_target,
-        JOINT2_SERVO_MAX_ANGLE
-    );
+move_servo_slowly(
+    JOINT2_GPIO,
+    -140.0f,
+    joint2_target,
+    JOINT2_SERVO_MAX_ANGLE,
+    JOINT2_MIN_ANGLE,
+    JOINT2_MAX_ANGLE,
+    -1.0f
+);
+sleep_ms(1000);
 
-    set_servo_position(
-        JOINT3_GPIO,
-        joint3_target,
-        JOINT3_SERVO_MAX_ANGLE
-    );
+move_servo_slowly(
+    JOINT3_GPIO,
+    45.0f,
+    joint3_target,
+    JOINT3_SERVO_MAX_ANGLE,
+    JOINT3_MIN_ANGLE,
+    JOINT3_MAX_ANGLE,
+    1.0f
+);
+sleep_ms(1000);
 
-    set_servo_position(
-        CLAW_GPIO,
-        claw_target,
-        CLAW_SERVO_MAX_ANGLE
-    );
+move_servo_slowly(
+    CLAW_GPIO,
+    45.0f,
+    claw_target,
+    CLAW_SERVO_MAX_ANGLE,
+    0.0f,
+    CLAW_SERVO_MAX_ANGLE,
+    1.0f
+);
+sleep_ms(1000);
 }

@@ -11,12 +11,12 @@ class ControllerManager(Node):
 
     def listener_output(self, msg):
 
-        if len(msg.axes) < 4 or len(msg.buttons) < 2:
-            return        
+        if len(msg.axes) < 6:
+            return      
 
         #Subscribe to joystick input
         joint0 = msg.axes[0]                                            # Joystick axis for base joint
-        if 0.05 < joint0 < 0.05:
+        if -0.05 < joint0 < 0.05:
             joint0 = 0.0
         joint1 = msg.axes[1]                                            # Joystick axis for shoulder joint
         if -0.05 < joint1 < 0.05:
@@ -27,8 +27,8 @@ class ControllerManager(Node):
         joint3 = msg.axes[3]                                            # Joystick axis for wrist joint
         if -0.05 < joint3 < 0.05: 
             joint3 = 0.0
-        clawopen = msg.buttons[0]                                       # Joystick button for opening the claw
-        clawclose = msg.buttons[1]                                      # Joystick button for closing the claw
+        clawopen = (1.0 - msg.axes[4]) / 2.0                                       # Joystick button for opening the claw
+        clawclose = (1.0 - msg.axes[5]) / 2.0                                      # Joystick button for closing the claw
         #print(f'GS receives controller input: Joint 0: {joint0}, Joint 1: {joint1}, Joint 2: {joint2}, Joint 3: {joint3}, Claw Open: {clawopen}, Claw Close: {clawclose}')
 
         #Publish the joint and claw values to the controller topic
